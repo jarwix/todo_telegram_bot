@@ -3,4 +3,4 @@ mysqlusername = ""
 mysqlpassword = ""
 mysqldbname = ""
 mysqlport = 3306
-mysqlhost = "localhost"
+mysqlhost = ""

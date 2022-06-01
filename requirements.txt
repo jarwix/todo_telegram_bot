@@ -1,0 +1,5 @@
+aiomysql~=0.1.1
+python-dateutil~=2.8.2
+pytz~=2022.1
+aiogram~=2.20
+APScheduler~=3.9.1

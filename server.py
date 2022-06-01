@@ -133,9 +133,9 @@ async def menu_numbers(call: CallbackQuery, state: FSMContext):
         await asyncio.sleep(0.3)
         await call.message.edit_reply_markup(reply_markup=keyboards.setup)
     else:
+        await bot.send_message(chat_id=user_data['user_id'], text="😐Ничего нет", reply_markup=keyboards.home)
         await state.finish()
         await call.message.delete()
-        await types.Message.answer("😐Ничего нет", reply_markup=keyboards.home)
 
 
 @dp.callback_query_handler(lambda call: call.data == "success")
@@ -152,9 +152,21 @@ async def success_menu(call: CallbackQuery, state: FSMContext):
         await asyncio.sleep(0.3)
         await call.message.edit_reply_markup(reply_markup=choice_key)
     else:
-        await state.finish()
-        await call.message.delete()
-        await types.Message.answer("😐Ничего нет", reply_markup=keyboards.home)
+        if user_data['current_page'] > 0:
+            await state.update_data(current_page=user_data['current_page']-1)
+            user_data = await state.get_data()
+            take_data = await db.take_all_tasks(user_data['user_id'])
+            choice_key = await keyboards.inline_keyboards.choice_add(user_data['current_page'], take_data)
+            await state.update_data(todo_list=take_data)
+            take_data = await todo.parsing_text(user_data['current_page'], take_data)
+            if take_data is not None and take_data != "":
+                await call.message.edit_text(text=take_data)
+                await asyncio.sleep(0.3)
+                await call.message.edit_reply_markup(reply_markup=choice_key)
+        else:
+            await bot.send_message(chat_id=user_data['user_id'], text="😐Ничего нет", reply_markup=keyboards.home)
+            await state.finish()
+            await call.message.delete()
 
 
 @dp.callback_query_handler(lambda call: call.data == "back")
@@ -169,9 +181,9 @@ async def success_menu(call: CallbackQuery, state: FSMContext):
         await asyncio.sleep(0.3)
         await call.message.edit_reply_markup(reply_markup=choice_key)
     else:
+        await bot.send_message(chat_id=user_data['user_id'], text="😐Ничего нет", reply_markup=keyboards.home)
         await state.finish()
         await call.message.delete()
-        await types.Message.answer("😐Ничего нет", reply_markup=keyboards.home)
 
 
 @dp.callback_query_handler(lambda call: call.data == "backbut")
@@ -188,9 +200,9 @@ async def success_menu(call: CallbackQuery, state: FSMContext):
         await asyncio.sleep(0.3)
         await call.message.edit_reply_markup(reply_markup=choice_key)
     else:
+        await bot.send_message(chat_id=user_data['user_id'],text="😐Ничего нет", reply_markup=keyboards.home)
         await state.finish()
         await call.message.delete()
-        await types.Message.answer("😐Ничего нет", reply_markup=keyboards.home)
 
 
 @dp.callback_query_handler(lambda call: call.data == "nextbut")
@@ -207,7 +219,7 @@ async def success_menu(call: CallbackQuery, state: FSMContext):
         await asyncio.sleep(0.3)
         await call.message.edit_reply_markup(reply_markup=choice_key)
     else:
-        await types.Message.answer("😐Ничего нет", reply_markup=keyboards.home)
+        await bot.send_message(chat_id=user_data['user_id'], text="😐Ничего нет", reply_markup=keyboards.home)
 
 
 @dp.callback_query_handler(text="cancel")
@@ -235,6 +247,7 @@ async def on_startup(_):
 
 async def db_check():
     take_data = await db.check_datetime()
+    print(str(take_data))
     for m in range(0, (len(take_data[0]))):
         await bot.send_message(str(take_data[0][m][1]), "Следующая задача:" + str(take_data[0][m][2]) +
                                "\nВремя выполнения: " + str(take_data[0][m][3]))
